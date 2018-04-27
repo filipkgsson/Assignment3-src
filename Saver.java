@@ -2,17 +2,20 @@ import java.lang.reflect.*;
 
 public class Saver {
 
-	private String xml;
+	private int count;
 
 	public Saver() {
-		xml = "";
+		count = 0;
 	}
 
 	public String save(Object o) throws NoSuchFieldException, SecurityException, IllegalArgumentException,
 			IllegalAccessException, InvocationTargetException {
+		String xml = "";
 		Class<?> clazz = o.getClass();
 		Element e = clazz.getDeclaredAnnotation(Element.class);
 		if (e != null) {
+			for(int i = 0; i < count; i++)
+				xml += " ";
 			xml += "<" + e.name() + " ";
 			String s = "";
 			String end = "";
@@ -24,12 +27,22 @@ public class Saver {
 					if (f.getType().isArray()) {
 						Object[] children = (Object[]) f.get(o);
 						if (children != null) {
-							s += " <" + sub.name() + ">";
+							count ++;
+							s += "\n";
+							for(int i = 0; i < count; i++)
+								s += " ";
+							s += "<" + sub.name() + ">";
 							for (Object child : children) {
-								Saver temp = new Saver();
-								s += "\n " + temp.save(child);
+								//Saver temp = new Saver();
+								s += "\n " + this.save(child);
 							}
-							s += "\n</" + sub.name() + ">\n</" + e.name() + ">";
+							s += "\n";
+							count --;
+							String space = "";
+							for(int i = 0; i < count; i++)
+								s += " ";
+							s += " ";
+							s += "</" + sub.name() + ">\n" + space + "</" + e.name() + ">";
 						}
 						else
 							end = "/";
@@ -42,7 +55,7 @@ public class Saver {
 				}
 			}
 			xml += end + ">";
-			xml += "\n " + s;
+			xml += s;
 		}
 		return xml;
 	}
